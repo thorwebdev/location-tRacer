@@ -47,6 +47,21 @@ bot.command("start", async (ctx) => {
   }
 });
 
+bot.command("stop", async (ctx) => {
+  const user = ctx.update?.message?.from;
+  if (!user) return;
+  const { data, error } = await supabase.from("sessions").update({
+    status: "COMPLETED",
+  }).eq("status", "ACTIVE").eq("user_id", user.id).select("events(name)")
+    .single();
+  if (error) {
+    console.log(`update:session_status:error: ${error.message}`);
+    return ctx.reply(`Sorry, something went wrong. Please try again!`);
+  } else {
+    return ctx.reply(`${data.events?.name} successfully completed!`);
+  }
+});
+
 bot.command("events", async (ctx) => {
   // List user events
   const user = ctx.update?.message?.from;
@@ -96,6 +111,7 @@ bot.on("message", async (ctx) => {
       user_id,
     });
     if (error) {
+      console.log(`session:insert:error: ${error.message}`);
       if (
         error.message ===
           'duplicate key value violates unique constraint "sessions_pkey"'
@@ -107,7 +123,14 @@ bot.on("message", async (ctx) => {
           \n\nWhen finished, stop sharing your location and run the /stop command!
         `);
       }
-      console.log(`session:insert:error: ${error.message}`);
+      if (
+        error.message ===
+          'duplicate key value violates unique constraint "active_session_constraint"'
+      ) {
+        return ctx.reply(
+          `You can only have one active event at a time. \nUse /events to see all your events. \nUse /stop to end the currently active event.`,
+        );
+      }
       return ctx.reply(
         `Sorry, there was an error adding you to the event. Please retry by running the /start command!`,
       );

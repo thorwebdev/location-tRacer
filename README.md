@@ -9,4 +9,5 @@ supabase gen types typescript --local --schema=public > supabase/functions/_shar
 ## Bot commands
 
 start - Start tracking an event.
+stop - Stop the currently active event.
 events - List your events.

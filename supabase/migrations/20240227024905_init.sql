@@ -54,3 +54,6 @@ create table public.sessions (
   constraint sessions_user_id_fkey foreign key (user_id) references users (id) on update cascade
 );
 alter table public.sessions enable row level security;
+-- Use partial index to create a unique constraint. Is that a good idea?
+CREATE UNIQUE INDEX active_session_constraint ON public.sessions (user_id)
+  WHERE (status = 'ACTIVE'::session_status);
