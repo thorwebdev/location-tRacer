@@ -30,6 +30,48 @@ export type Database = {
         }
         Relationships: []
       }
+      locations: {
+        Row: {
+          event_id: string
+          lat: number
+          location: unknown
+          long: number
+          timestamp: string
+          user_id: number
+        }
+        Insert: {
+          event_id: string
+          lat: number
+          location: unknown
+          long: number
+          timestamp: string
+          user_id: number
+        }
+        Update: {
+          event_id?: string
+          lat?: number
+          location?: unknown
+          long?: number
+          timestamp?: string
+          user_id?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "locations_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "events"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "locations_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       sessions: {
         Row: {
           created_at: string
@@ -103,6 +145,15 @@ export type Database = {
           size: number
         }
         Returns: string
+      }
+      location_insert: {
+        Args: {
+          _timestamp: number
+          _lat: number
+          _long: number
+          _user_id: number
+        }
+        Returns: undefined
       }
     }
     Enums: {

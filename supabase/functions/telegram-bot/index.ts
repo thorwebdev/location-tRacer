@@ -92,7 +92,7 @@ bot.command("events", async (ctx) => {
 
 bot.on("message", async (ctx) => {
   // Check for message or location.
-  const { text, location, from: { id: user_id } } = ctx.update.message;
+  const { text, location, from: { id: user_id }, date } = ctx.update.message;
   if (text) {
     // Check event code
     const { data } = await supabase.from("events").select("id, name").eq(
@@ -143,11 +143,47 @@ bot.on("message", async (ctx) => {
       `);
     }
   } else if (location) {
-    // Check for active session
+    // Insert into db
+    const { error } = await supabase.rpc("location_insert", {
+      _user_id: user_id,
+      _lat: location.latitude,
+      _long: location.longitude,
+      _timestamp: date,
+    });
+    if (error) {
+      if (
+        error.message ===
+          'null value in column "event_id" of relation "locations" violates not-null constraint'
+      ) {
+        return ctx.reply(
+          `You don't have any active event! Please stop location sharing and run the /start command!`,
+        );
+      }
+      console.log(`location:insert:error:user:${user_id}: ${error.message}`);
+    }
   } else return;
 });
 bot.on("edit:location", async (ctx) => {
-  console.log("edit:location", JSON.stringify(ctx, null, 2));
+  const { location, from: { id: user_id }, edit_date } = ctx.update
+    .edited_message!;
+  if (location) {
+    // Insert into db
+    const { error } = await supabase.rpc("location_insert", {
+      _user_id: user_id,
+      _lat: location.latitude,
+      _long: location.longitude,
+      _timestamp: edit_date,
+    });
+    if (
+      error && error.message !==
+        'null value in column "event_id" of relation "locations" violates not-null constraint'
+    ) {
+      return console.log(
+        `location:insert:error:user:${user_id}: ${error.message}`,
+      );
+    }
+  }
+  return;
 });
 
 const handleUpdate = webhookCallback(bot, "std/http");
