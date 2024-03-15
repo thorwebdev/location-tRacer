@@ -69,6 +69,7 @@ create table public.locations (
   lat double precision not null,
   long double precision not null,
   location geography(POINT) not null, -- 'POINT(long lat)'
+  -- TODO: store heading
   constraint locations_pkey primary key (event_id, user_id, created_at),
   constraint locations_event_id_fkey foreign key (event_id) references events (id) on update cascade,
   constraint locations_user_id_fkey foreign key (user_id) references users (id) on update cascade
