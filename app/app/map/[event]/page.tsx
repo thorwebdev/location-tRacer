@@ -6,6 +6,7 @@ import { createClient } from '@/utils/supabase/client'
 import { useEffect, useState } from 'react'
 
 const DynamicMap = dynamic(() => import('@/components/map/Map'), {
+  // https://nextjs.org/docs/pages/building-your-application/optimizing/lazy-loading#with-no-ssr
   ssr: false,
 })
 

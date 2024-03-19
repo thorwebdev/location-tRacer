@@ -21,7 +21,7 @@ export default async function Map({ data }: { data: any }) {
       />
       <Polyline
         positions={data.map((location: any) => [location.lat, location.long])}
-      ></Polyline>
+      />
       {data.map((location: any) => (
         <CircleMarker center={[location.lat, location.long]}>
           <Popup>
