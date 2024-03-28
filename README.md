@@ -66,3 +66,11 @@ select date, event_id, user_id,
 ((distance / EXTRACT(EPOCH FROM duration)) * 3600) / 1000 as kmh
 from stats;
 ```
+
+## Generate Pmtiles
+
+```bash
+# Singapore Sentosa
+# http://bboxfinder.com/#1.195877,103.788897,1.283919,103.906314
+pmtiles extract https://build.protomaps.com/20240320.pmtiles singapore_oc.pmtiles --bbox=103.788897,1.195877,103.906314,1.283919
+```
