@@ -33,7 +33,7 @@ Deno.serve(async (req) => {
   const modHeaders = new Headers(headers);
   modHeaders.append(
     "authorization",
-    Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
+    `Bearer ${Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!}`,
   );
   return fetch(url, { method, headers: modHeaders });
 });
