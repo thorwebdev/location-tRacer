@@ -15,6 +15,7 @@ import '@/components/map/map.css'
 
 export default function Page({ params }: { params: { event: string } }) {
   const supabase = createClient<Database>()
+  const [event, setEvent] = useState<Tables<'events_public'> | null>(null)
   const [paths, setPaths] = useState<
     Partial<Tables<'location_paths'>>[] | null
   >(null)
@@ -28,10 +29,23 @@ export default function Page({ params }: { params: { event: string } }) {
   }, [])
 
   useEffect(() => {
+    async function loadEvent() {
+      const { data, error } = await supabase
+        .from('events_public')
+        .select('*')
+        .eq('id', params.event)
+        .single()
+      console.log({ data, error })
+      setEvent(data)
+    }
+    if (params.event && !event) loadEvent()
+  }, [])
+
+  useEffect(() => {
     async function loadPaths() {
       const { data, error } = await supabase
         .from('location_paths')
-        .select('user_id, geojson')
+        .select('user_id, team_name, geojson')
         .eq('event_id', params.event)
       console.log({ data, error })
       setPaths(data)
@@ -39,7 +53,7 @@ export default function Page({ params }: { params: { event: string } }) {
     if (!paths) loadPaths()
   }, [])
 
-  if (!paths) return <div>LOADING...</div>
+  if (!event || !paths) return <div>LOADING...</div>
 
   // TODO: make function that assign color based on user_id
   const layerStyle = ({ id }: { id: string }): LineLayer => ({
@@ -58,14 +72,14 @@ export default function Page({ params }: { params: { event: string } }) {
 
   return (
     <div style={{ width: '100%' }}>
-      Event: {params.event}
+      Event: {event.name}
       <div className="map-wrap">
         <Map
           className="map"
           cooperativeGestures={true}
           initialViewState={{
-            longitude: 151.265468,
-            latitude: -33.870509,
+            longitude: event.location_latlong?.[1],
+            latitude: event.location_latlong?.[0],
             zoom: 13,
           }}
           mapStyle={{

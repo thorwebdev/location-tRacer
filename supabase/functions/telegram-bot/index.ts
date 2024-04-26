@@ -75,54 +75,95 @@ bot.command("events", async (ctx) => {
       `
         Your active sessions:
         \n<b>CODE | NAME | STATUS</b>
-          ${
-        data.map((row) => (`
-            \n${row.events?.code} | ${row.events?.name} | ${row.status}
-          `))
+        ${
+        data.map((
+          row,
+        ) => (`\n${row.events?.code} | ${row.events?.name} | ${row.status}`))
       }
-      `,
+      `.trim(),
       { parse_mode: "HTML" },
     );
   } else {
     return ctx.reply(
-      `You don't have any active events, please enter a event code!`,
+      `You don't have any active events, please enter an event code!`,
     );
   }
 });
 
+bot.command("update", async (ctx) => {
+  const user = ctx.update?.message?.from;
+  if (!user) return;
+  const { error, data } = await supabase.from("sessions").update({
+    team_name: null,
+  }).match({ user_id: user.id, status: "ACTIVE" }).select("id");
+  if (error) {
+    console.log(`error:reset:username: ${error.message}`);
+    return ctx.reply(
+      `Sorry, there was an error, please try again!`,
+    );
+  } else if (data.length === 0) {
+    return ctx.reply(
+      `You don't have any active session. Please run the /start command.`,
+    );
+  }
+  return ctx.reply(
+    `Please send your (team) name:`,
+  );
+});
+
 bot.on("message", async (ctx) => {
   // Check for message or location.
-  const { text, location, from: { id: user_id }, date } = ctx.update.message;
+  const { text, location, from: { id: user_id, username }, date } =
+    ctx.update.message;
   if (text) {
+    // Check if user has active session
+    const { data: session } = await supabase.from("sessions").select(
+      "id, team_name, events(name)",
+    ).match({ "user_id": user_id, status: "ACTIVE" }).single();
+    // check if team_name is null -> update name
+    if (session && !session.team_name) {
+      const { error } = await supabase.from("sessions").update({
+        team_name: text,
+      }).eq("id", session.id);
+      if (error) {
+        console.log(`session:update:team_name: ${error.message}`);
+        return ctx.reply(
+          `Sorry, there was an issue updating your (team) name. Please try again!`,
+        );
+      }
+      return ctx.reply(`
+          Your (team) name has been changed to ${text}.
+          \n\nWhen you're ready, simply start sharing your live location here. 
+          \n\nMake sure to select a duration long enough to cover the entire event!
+          \n\nWhen finished, stop sharing your location and run the /stop command!
+        `);
+    } else if (session) {
+      return ctx.reply(`
+          You're already enrolled in ${session.events?.name}!
+          \n\nYour current (team) name is ${session.team_name}. To change it run the /update command.
+          \n\nWhen you're ready, simply start sharing your live location here. 
+          \n\nMake sure to select a duration long enough to cover the entire event!
+          \n\nWhen finished, stop sharing your location and run the /stop command!
+        `);
+    }
     // Check event code
     const { data } = await supabase.from("events").select("id, name").eq(
       "code",
       text,
-    ).single(); // TODO: check event date
+    ).single(); // TODO: check event date / check if active event
     if (!data) {
       return ctx.reply(
         `Sorry, this event code doesn't exist. Please check with the event organizer!`,
       );
     }
     // Create event session for the user
-    // TODO: only one active session per user
     const { error } = await supabase.from("sessions").insert({
       event_id: data.id,
       user_id,
+      team_name: username,
     });
     if (error) {
       console.log(`session:insert:error: ${error.message}`);
-      if (
-        error.message ===
-          'duplicate key value violates unique constraint "sessions_pkey"'
-      ) {
-        return ctx.reply(`
-          You're already enrolled in ${data.name}!
-          \n\nWhen you're ready, simply start sharing your live location here. 
-          \n\nMake sure to select a duration long enough to cover the entire event!
-          \n\nWhen finished, stop sharing your location and run the /stop command!
-        `);
-      }
       if (
         error.message ===
           'duplicate key value violates unique constraint "active_session_constraint"'
@@ -137,6 +178,7 @@ bot.on("message", async (ctx) => {
     } else {
       return ctx.reply(`
         Welcome to ${data.name}!
+        \n\nYour current (team) name is ${username}. To change it run the /update command. 
         \n\nWhen you're ready, simply start sharing your live location here. 
         \n\nMake sure to select a duration long enough to cover the entire event!
         \n\nWhen finished, stop sharing your location and run the /stop command!
