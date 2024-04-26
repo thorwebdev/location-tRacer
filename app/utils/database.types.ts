@@ -36,21 +36,30 @@ export type Database = {
     Tables: {
       events: {
         Row: {
+          active: boolean | null
           code: string
           created_at: string
+          geojson_route: string | null
           id: string
+          location_latlong: number[] | null
           name: string
         }
         Insert: {
+          active?: boolean | null
           code?: string
           created_at?: string
+          geojson_route?: string | null
           id?: string
+          location_latlong?: number[] | null
           name: string
         }
         Update: {
+          active?: boolean | null
           code?: string
           created_at?: string
+          geojson_route?: string | null
           id?: string
+          location_latlong?: number[] | null
           name?: string
         }
         Relationships: []
@@ -89,6 +98,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "locations_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "events_public"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "locations_user_id_fkey"
             columns: ["user_id"]
             isOneToOne: false
@@ -103,6 +119,7 @@ export type Database = {
           event_id: string
           id: string
           status: Database["public"]["Enums"]["session_status"]
+          team_name: string | null
           user_id: number
         }
         Insert: {
@@ -110,6 +127,7 @@ export type Database = {
           event_id: string
           id?: string
           status?: Database["public"]["Enums"]["session_status"]
+          team_name?: string | null
           user_id: number
         }
         Update: {
@@ -117,6 +135,7 @@ export type Database = {
           event_id?: string
           id?: string
           status?: Database["public"]["Enums"]["session_status"]
+          team_name?: string | null
           user_id?: number
         }
         Relationships: [
@@ -125,6 +144,13 @@ export type Database = {
             columns: ["event_id"]
             isOneToOne: false
             referencedRelation: "events"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "sessions_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "events_public"
             referencedColumns: ["id"]
           },
           {
@@ -162,11 +188,36 @@ export type Database = {
       }
     }
     Views: {
+      events_public: {
+        Row: {
+          active: boolean | null
+          geojson_route: string | null
+          id: string | null
+          location_latlong: number[] | null
+          name: string | null
+        }
+        Insert: {
+          active?: boolean | null
+          geojson_route?: string | null
+          id?: string | null
+          location_latlong?: number[] | null
+          name?: string | null
+        }
+        Update: {
+          active?: boolean | null
+          geojson_route?: string | null
+          id?: string | null
+          location_latlong?: number[] | null
+          name?: string | null
+        }
+        Relationships: []
+      }
       location_paths: {
         Row: {
           event_id: string | null
           geojson: string | null
           path: unknown | null
+          team_name: string | null
           user_id: number | null
         }
         Relationships: [
@@ -175,6 +226,13 @@ export type Database = {
             columns: ["event_id"]
             isOneToOne: false
             referencedRelation: "events"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "locations_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "events_public"
             referencedColumns: ["id"]
           },
           {
@@ -203,6 +261,19 @@ export type Database = {
         }
         Returns: undefined
       }
+      makelinenotice:
+        | {
+            Args: {
+              geog: unknown
+            }
+            Returns: unknown
+          }
+        | {
+            Args: {
+              geoms_array: unknown[]
+            }
+            Returns: unknown
+          }
     }
     Enums: {
       session_status: "ACTIVE" | "COMPLETED"
