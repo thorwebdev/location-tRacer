@@ -13,6 +13,15 @@ stop - Stop the currently active event.
 events - List your events.
 update - Update your (team) name.
 
+## Generate types
+
+```bash
+# For supabase functions
+supabase gen types typescript --linked > supabase/functions/_shared/database.types.ts
+# For nextjs app
+supabase gen types typescript --linked > app/utils/database.types.ts
+```
+
 ## Deploy
 
 ```bash

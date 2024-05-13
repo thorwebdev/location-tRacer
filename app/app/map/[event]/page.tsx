@@ -45,7 +45,7 @@ export default function Page({ params }: { params: { event: string } }) {
     async function loadPaths() {
       const { data, error } = await supabase
         .from('location_paths')
-        .select('user_id, team_name, geojson')
+        .select('user_id, team_name, geojson, color')
         .eq('event_id', params.event)
       console.log({ data, error })
       setPaths(data)
@@ -56,7 +56,13 @@ export default function Page({ params }: { params: { event: string } }) {
   if (!event || !paths) return <div>LOADING...</div>
 
   // TODO: make function that assign color based on user_id
-  const layerStyle = ({ id }: { id: string }): LineLayer => ({
+  const layerStyle = ({
+    id,
+    color,
+  }: {
+    id: string
+    color: string
+  }): LineLayer => ({
     id,
     type: 'line',
     source: 'route',
@@ -65,7 +71,7 @@ export default function Page({ params }: { params: { event: string } }) {
       'line-cap': 'round',
     },
     paint: {
-      'line-color': '#888',
+      'line-color': color,
       'line-width': 8,
     },
   })
@@ -119,6 +125,7 @@ export default function Page({ params }: { params: { event: string } }) {
               <Layer
                 {...layerStyle({
                   id: `layer-${path.user_id}`,
+                  color: path.color!,
                 })}
               />
             </Source>
