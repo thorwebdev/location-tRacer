@@ -1,8 +1,8 @@
 'use client'
 
 import { createClient } from '@/utils/supabase/client'
-import { useEffect, useState } from 'react'
-import Map, { Source, Layer } from 'react-map-gl'
+import { useEffect, useRef, useState } from 'react'
+import Map, { Source, Layer, Marker } from 'react-map-gl'
 import maplibregl from 'maplibre-gl'
 import 'maplibre-gl/dist/maplibre-gl.css'
 import { default as layers } from 'protomaps-themes-base'
@@ -19,6 +19,15 @@ export default function Page({ params }: { params: { event: string } }) {
   const [paths, setPaths] = useState<
     Partial<Tables<'location_paths'>>[] | null
   >(null)
+  const pathsRef = useRef<Partial<Tables<'location_paths'>>[] | null>()
+  pathsRef.current = paths
+  const [locations, setLocations] = useState<{
+    [key: string]: Tables<'locations'>
+  } | null>(null)
+  const locationsRef = useRef<{
+    [key: string]: Tables<'locations'>
+  } | null>()
+  locationsRef.current = locations
 
   useEffect(() => {
     let protocol = new Protocol()
@@ -35,22 +44,76 @@ export default function Page({ params }: { params: { event: string } }) {
         .select('*')
         .eq('id', params.event)
         .single()
-      console.log({ data, error })
       setEvent(data)
     }
     if (params.event && !event) loadEvent()
   }, [])
 
+  async function loadPaths() {
+    const { data, error } = await supabase
+      .from('location_paths')
+      .select('user_id, team_name, geojson, color')
+      .eq('event_id', params.event)
+    setPaths(data)
+  }
   useEffect(() => {
-    async function loadPaths() {
-      const { data, error } = await supabase
-        .from('location_paths')
-        .select('user_id, team_name, geojson, color')
-        .eq('event_id', params.event)
-      console.log({ data, error })
-      setPaths(data)
-    }
     if (!paths) loadPaths()
+  }, [])
+
+  // If event is active, subscribe to realtime updates
+  useEffect(() => {
+    if (event?.active) {
+      // Listen to realtime updates
+      const subs = supabase
+        .channel('schema-db-changes')
+        .on(
+          'postgres_changes',
+          {
+            event: 'INSERT', // Listen only to INSERTs
+            schema: 'public',
+            table: 'locations',
+            filter: `event_id=eq.${params.event}`,
+          },
+          (payload) => {
+            const loc = payload.new as Tables<'locations'>
+            const updated = {
+              ...locationsRef.current,
+              [loc.user_id.toString()]: loc,
+            }
+            setLocations(updated)
+            // Update gejson
+            if (pathsRef.current?.length) {
+              const cpPaths = pathsRef.current
+              const i = cpPaths.findIndex((p) => p.user_id === loc.user_id)
+              if (i === -1) {
+                return loadPaths()
+              }
+              const geojson = JSON.parse(
+                cpPaths[i].geojson ?? `"{"type":"LineString","coordinates":[]}"`
+              )
+              geojson.coordinates.push([loc.long, loc.lat])
+              cpPaths[i].geojson = JSON.stringify(geojson)
+              setPaths(cpPaths)
+            } else {
+              // Event has started, load paths.
+              loadPaths()
+            }
+          }
+        )
+        .subscribe()
+
+      return () => {
+        subs.unsubscribe()
+      }
+    }
+  }, [event])
+
+  useEffect(() => {
+    let protocol = new Protocol()
+    maplibregl.addProtocol('pmtiles', protocol.tile)
+    return () => {
+      maplibregl.removeProtocol('pmtiles')
+    }
   }, [])
 
   if (!event || !paths) return <div>LOADING...</div>
@@ -110,9 +173,10 @@ export default function Page({ params }: { params: { event: string } }) {
           // @ts-ignore
           mapLib={maplibregl}
         >
+          {/* Draw Route */}
           {paths.map((path) => (
             <Source
-              key={path.user_id}
+              key={`source-${path.user_id}`}
               id={`route-${path.user_id}`}
               type="geojson"
               data={{
@@ -130,6 +194,21 @@ export default function Page({ params }: { params: { event: string } }) {
               />
             </Source>
           ))}
+          {/* Add realtime marker */}
+          {locations &&
+            Object.entries(locations).map(([key, value]) => (
+              <Marker
+                key={`marker-${key}`}
+                longitude={value.long}
+                latitude={value.lat}
+                color={
+                  paths.find((p) => p.user_id === value.user_id)?.color ??
+                  undefined
+                }
+                // popup={popup}
+                // ref={markerRef}
+              />
+            ))}
         </Map>
       </div>
     </div>
