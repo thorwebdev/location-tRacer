@@ -202,8 +202,12 @@ bot.on("message", async (ctx) => {
         );
       }
       console.log(`location:insert:error:user:${user_id}: ${error.message}`);
+    } else {
+      return ctx.reply(
+        `Race tracking is on! Good luck!`,
+      );
     }
-  } else return;
+  }
 });
 bot.on("edit:location", async (ctx) => {
   const { location, from: { id: user_id }, edit_date } = ctx.update
@@ -218,10 +222,12 @@ bot.on("edit:location", async (ctx) => {
     });
     if (
       error && error.message !==
-        'null value in column "event_id" of relation "locations" violates not-null constraint'
+        'null value in column "event_id" of relation "locations" violates not-null constraint' &&
+      error.message !==
+        'duplicate key value violates unique constraint "locations_pkey"'
     ) {
       return console.log(
-        `location:insert:error:user:${user_id}: ${error.message}`,
+        `edit:location:insert:error:user:${user_id}: ${error.message}`,
       );
     }
   }
@@ -231,6 +237,7 @@ bot.on("edit:location", async (ctx) => {
 const handleUpdate = webhookCallback(bot, "std/http");
 
 Deno.serve(async (req) => {
+  const headers = req.headers;
   try {
     const url = new URL(req.url);
     if (url.searchParams.get("secret") !== Deno.env.get("FUNCTION_SECRET")) {
@@ -239,6 +246,8 @@ Deno.serve(async (req) => {
 
     return await handleUpdate(req);
   } catch (err) {
+    console.log(headers);
     console.error(err);
   }
+  return new Response();
 });
