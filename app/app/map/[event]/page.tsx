@@ -159,7 +159,8 @@ export default function Page({ params }: { params: { event: string } }) {
               protomaps: {
                 type: 'vector',
                 tiles: [
-                  'https://api.protomaps.com/tiles/v3/{z}/{x}/{y}.mvt?key=e6cd5633d51d8e24',
+                  process.env.NEXT_PUBLIC_PROTOMAPS_URL ??
+                    'https://api.protomaps.com/tiles/v3/{z}/{x}/{y}.mvt?key=e6cd5633d51d8e24',
                 ],
                 maxzoom: 15,
               },
