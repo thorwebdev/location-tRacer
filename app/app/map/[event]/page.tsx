@@ -2,7 +2,7 @@
 
 import { createClient } from '@/utils/supabase/client'
 import { useEffect, useRef, useState } from 'react'
-import Map, { Source, Layer, Marker } from 'react-map-gl'
+import Map, { Source, Layer, Marker, Popup } from 'react-map-gl'
 import maplibregl from 'maplibre-gl'
 import 'maplibre-gl/dist/maplibre-gl.css'
 import { default as layers } from 'protomaps-themes-base'
@@ -196,19 +196,33 @@ export default function Page({ params }: { params: { event: string } }) {
           ))}
           {/* Add realtime marker */}
           {locations &&
-            Object.entries(locations).map(([key, value]) => (
-              <Marker
-                key={`marker-${key}`}
-                longitude={value.long}
-                latitude={value.lat}
-                color={
-                  paths.find((p) => p.user_id === value.user_id)?.color ??
-                  undefined
-                }
-                // popup={popup}
-                // ref={markerRef}
-              />
-            ))}
+            Object.entries(locations).map(([key, value]) => {
+              const { color, team_name } =
+                paths.find((p) => p.user_id === value.user_id) ?? {}
+
+              return (
+                <div key={`mpgroup-${key}`}>
+                  <Marker
+                    key={`marker-${key}`}
+                    longitude={value.long}
+                    latitude={value.lat}
+                    color={color ?? undefined}
+                  />
+                  <Popup
+                    key={`popup-${key}`}
+                    longitude={value.long}
+                    latitude={value.lat}
+                    anchor="bottom"
+                    closeButton={false}
+                    closeOnClick={false}
+                    offset={30}
+                    style={{ color: '#000' }}
+                  >
+                    {team_name}
+                  </Popup>
+                </div>
+              )
+            })}
         </Map>
       </div>
     </div>
