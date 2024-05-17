@@ -32,8 +32,10 @@ export default function Page() {
               url: 'pmtiles://https://jkcrtymvpupiodvysjce.supabase.co/functions/v1/maps-private/singapore_oc.pmtiles',
             },
           },
+          // @ts-ignore
           layers: layers('protomaps', 'light'),
         }}
+        // @ts-ignore
         mapLib={maplibregl}
       />
     </div>
