@@ -12,6 +12,7 @@ import type { LineLayer } from 'react-map-gl/maplibre'
 import { Database, Tables } from '@/utils/database.types'
 
 import '@/components/map/map.css'
+import { TeamLegend } from '@/components/team-legend'
 
 export default function Page({ params }: { params: { event: string } }) {
   const supabase = createClient<Database>()
@@ -141,7 +142,6 @@ export default function Page({ params }: { params: { event: string } }) {
 
   return (
     <div style={{ width: '100%' }}>
-      Event: {event.name}
       <div className="map-wrap">
         <Map
           className="map"
@@ -226,6 +226,7 @@ export default function Page({ params }: { params: { event: string } }) {
             })}
         </Map>
       </div>
+      <TeamLegend event={event.name} paths={paths} />
     </div>
   )
 }
