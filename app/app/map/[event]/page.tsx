@@ -200,6 +200,7 @@ export default function Page({ params }: { params: { event: string } }) {
             Object.entries(locations).map(([key, value]) => {
               const { color, team_name } =
                 paths.find((p) => p.user_id === value.user_id) ?? {}
+              const time = new Date(value.created_at).toLocaleTimeString()
 
               return (
                 <div key={`mpgroup-${key}`}>
@@ -219,7 +220,9 @@ export default function Page({ params }: { params: { event: string } }) {
                     offset={30}
                     style={{ color: '#000' }}
                   >
-                    {team_name}
+                    <strong>{team_name}</strong>
+                    <br />
+                    <i>{`(updated: ${time})`}</i>
                   </Popup>
                 </div>
               )
