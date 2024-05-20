@@ -135,7 +135,7 @@ bot.on("message", async (ctx) => {
           Your (team) name has been changed to ${text}.
           \n\nWhen you're ready, simply start sharing your live location here. 
           \n\nMake sure to select a duration long enough to cover the entire event!
-          \n\nWhen finished, stop sharing your location and run the /stop command!
+          \n\nWhen finished, stop sharing your location and run the stop command!
         `);
     } else if (session) {
       return ctx.reply(`
@@ -143,7 +143,7 @@ bot.on("message", async (ctx) => {
           \n\nYour current (team) name is ${session.team_name}. To change it run the /update command.
           \n\nWhen you're ready, simply start sharing your live location here. 
           \n\nMake sure to select a duration long enough to cover the entire event!
-          \n\nWhen finished, stop sharing your location and run the /stop command!
+          \n\nWhen finished, stop sharing your location and run the stop command!
         `);
     }
     // Check event code
@@ -169,7 +169,7 @@ bot.on("message", async (ctx) => {
           'duplicate key value violates unique constraint "active_session_constraint"'
       ) {
         return ctx.reply(
-          `You can only have one active event at a time. \nUse /events to see all your events. \nUse /stop to end the currently active event.`,
+          `You can only have one active event at a time. \nUse /events to see all your events. \nUse stop to end the currently active event.`,
         );
       }
       return ctx.reply(
@@ -181,7 +181,7 @@ bot.on("message", async (ctx) => {
         \n\nYour current (team) name is ${username}. To change it run the /update command. 
         \n\nWhen you're ready, simply start sharing your live location here. 
         \n\nMake sure to select a duration long enough to cover the entire event!
-        \n\nWhen finished, stop sharing your location and run the /stop command!
+        \n\nWhen finished, stop sharing your location and run the stop command!
       `);
     }
   } else if (location) {
