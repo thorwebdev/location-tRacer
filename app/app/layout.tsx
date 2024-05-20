@@ -28,6 +28,14 @@ export default function RootLayout({
         <main className="min-h-screen flex flex-col items-center">
           {children}
         </main>
+        <div className="fixed bottom-0 right-0 bg-gray-900 text-white px-4 py-2 flex items-center gap-2">
+          <a className="text-sm hover:underline" href="https://thor.bio">
+            © 2024 THORWEBDEV
+          </a>
+          <a className="text-sm hover:underline" href="https://t.me/thorwebdev">
+            Contact
+          </a>
+        </div>
       </body>
     </html>
   )
