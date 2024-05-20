@@ -43,6 +43,7 @@ export type Database = {
           id: string
           location_latlong: number[] | null
           name: string
+          starting_at: string | null
         }
         Insert: {
           active?: boolean | null
@@ -52,6 +53,7 @@ export type Database = {
           id?: string
           location_latlong?: number[] | null
           name: string
+          starting_at?: string | null
         }
         Update: {
           active?: boolean | null
@@ -61,6 +63,7 @@ export type Database = {
           id?: string
           location_latlong?: number[] | null
           name?: string
+          starting_at?: string | null
         }
         Relationships: []
       }
@@ -198,6 +201,7 @@ export type Database = {
           id: string | null
           location_latlong: number[] | null
           name: string | null
+          starting_at: string | null
         }
         Insert: {
           active?: boolean | null
@@ -205,6 +209,7 @@ export type Database = {
           id?: string | null
           location_latlong?: number[] | null
           name?: string | null
+          starting_at?: string | null
         }
         Update: {
           active?: boolean | null
@@ -212,6 +217,7 @@ export type Database = {
           id?: string | null
           location_latlong?: number[] | null
           name?: string | null
+          starting_at?: string | null
         }
         Relationships: []
       }

@@ -13,6 +13,7 @@ import { Database, Tables } from '@/utils/database.types'
 
 import '@/components/map/map.css'
 import { TeamLegend } from '@/components/team-legend'
+import { Modal } from '@/components/modal'
 
 export default function Page({ params }: { params: { event: string } }) {
   const supabase = createClient<Database>()
@@ -45,6 +46,10 @@ export default function Page({ params }: { params: { event: string } }) {
         .select('*')
         .eq('id', params.event)
         .single()
+      if (error) {
+        alert(`Error lodaing event. Please double check the URL.`)
+        // TODO: show not found.
+      }
       setEvent(data)
     }
     if (params.event && !event) loadEvent()
@@ -58,8 +63,13 @@ export default function Page({ params }: { params: { event: string } }) {
     setPaths(data)
   }
   useEffect(() => {
-    if (!paths) loadPaths()
-  }, [])
+    if (
+      event?.starting_at &&
+      new Date(event.starting_at) < new Date() &&
+      !paths
+    )
+      loadPaths()
+  }, [event])
 
   // If event is active, subscribe to realtime updates
   useEffect(() => {
@@ -117,9 +127,21 @@ export default function Page({ params }: { params: { event: string } }) {
     }
   }, [])
 
-  if (!event || !paths) return <div>LOADING...</div>
+  if (!event) return <div>LOADING...</div>
 
-  // TODO: make function that assign color based on user_id
+  if (event?.starting_at && new Date(event.starting_at) > new Date()) {
+    return (
+      <Modal
+        headline={event.name!}
+        body={`Event starts at ${new Date(
+          event.starting_at
+        ).toLocaleString()}!`}
+      />
+    )
+  }
+
+  if (!paths) return <div>LOADING...</div>
+
   const layerStyle = ({
     id,
     color,
