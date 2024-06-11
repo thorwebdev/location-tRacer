@@ -1,7 +1,7 @@
 'use client'
 
 import { createClient } from '@/utils/supabase/client'
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import Map, { Marker } from 'react-map-gl'
 import maplibregl from 'maplibre-gl'
 import 'maplibre-gl/dist/maplibre-gl.css'
@@ -17,9 +17,12 @@ export default function Page({ params }: { params: { event: string } }) {
   const [locations, setLocations] = useState<{
     [key: string]: Tables<'locations'>
   } | null>(null)
+  const locationsRef = useRef<{
+    [key: string]: Tables<'locations'>
+  } | null>()
+  locationsRef.current = locations
 
   useEffect(() => {
-    // TODO Fetch route
     // Listen to realtime updates
     const subs = supabase
       .channel('schema-db-changes')
@@ -33,7 +36,10 @@ export default function Page({ params }: { params: { event: string } }) {
         },
         (payload) => {
           const loc = payload.new as Tables<'locations'>
-          const updated = { ...locations, [loc.user_id.toString()]: loc }
+          const updated = {
+            ...locationsRef.current,
+            [loc.user_id.toString()]: loc,
+          }
           console.log(updated)
           setLocations(updated)
         }
@@ -52,17 +58,6 @@ export default function Page({ params }: { params: { event: string } }) {
     return () => {
       maplibregl.removeProtocol('pmtiles')
     }
-  }, [])
-
-  // TODO: figure out dynamic marker
-  const markerRef = useRef<maplibregl.Marker | undefined>()
-
-  const popup = useMemo(() => {
-    return new maplibregl.Popup().setText('Hello world!')
-  }, [])
-
-  const togglePopup = useCallback(() => {
-    markerRef.current?.togglePopup()
   }, [])
 
   if (!locations) return <div>WAITING FOR UPDATES...</div>
@@ -107,8 +102,6 @@ export default function Page({ params }: { params: { event: string } }) {
               longitude={value.long}
               latitude={value.lat}
               color="red"
-              // popup={popup}
-              // ref={markerRef}
             />
           ))}
         </Map>
